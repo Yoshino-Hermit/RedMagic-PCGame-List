@@ -1,0 +1,27 @@
+# Build
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# 签名相关（绝不入库）
+*.keystore
+*.jks
+keystore.properties
+
+# 产物
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# 系统
+Thumbs.db
+desktop.ini

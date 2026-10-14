@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      深色主题：消除启动瞬间的白屏。
+      - windowDisablePreview 关闭系统预览窗口（避免白屏一闪）
+      - windowIsTranslucent 让配置过程完全无感
+      - 背景保持纯黑，符合游戏场景
+    -->
+    <style name="AppTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
+</resources>

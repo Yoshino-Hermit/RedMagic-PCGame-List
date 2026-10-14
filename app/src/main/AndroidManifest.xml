@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        <!-- 桌面图标：点击即配置 + 启动红魔PC游戏。theme 使用深色主题消除白屏 -->
+        <activity
+            android:name=".LauncherActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- libxposed 现代 API 的服务入口，框架靠它识别并连接模块 -->
+        <provider
+            android:name="io.github.libxposed.service.XposedProvider"
+            android:authorities="com.rm.pcgamelist.XposedService"
+            android:exported="true" />
+    </application>
+
+</manifest>

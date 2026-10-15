@@ -6,16 +6,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
  * 桌面上那个"红魔PC游戏"图标。
  *
- * <p>点击后：首次运行 → 用 root 自动把游戏写进游戏列表并重启助手；
- * 随后直接拉起红魔PC游戏。
+ * <p>点击后：自动完成配置（补全模块作用域 → 写入游戏列表 → 重启助手），随后拉起红魔PC游戏。
  */
 public class LauncherActivity extends Activity {
 
+    private static final String TAG = "PcGameList";
     private final Handler main = new Handler(Looper.getMainLooper());
 
     @Override
@@ -23,8 +24,12 @@ public class LauncherActivity extends Activity {
         super.onCreate(savedInstanceState);
         new Thread(() -> {
             RootConfig.Result result = RootConfig.ensureConfigured(this);
+            Log.i(TAG, "configure result: ok=" + result.ok + " msg=" + result.message);
             main.post(() -> {
                 if (!result.ok) {
+                    Toast.makeText(this, result.message, Toast.LENGTH_LONG).show();
+                } else if (!"配置已是最新".equals(result.message)) {
+                    // 有实际改动时给个反馈，便于用户知道发生了什么
                     Toast.makeText(this, result.message, Toast.LENGTH_LONG).show();
                 }
                 launchGame();

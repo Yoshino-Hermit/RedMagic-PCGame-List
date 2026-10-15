@@ -89,8 +89,11 @@ APK 自带一个 Launcher 图标（显示为「红魔PC游戏」）。点击时�
 3. 在框架管理器里**启用本模块**，作用域勾选：
    - `系统框架 (system_server)`
    - `游戏空间 (cn.nubia.gamelauncher)`
-4. 重启游戏空间进程（或重启手机）。
-5. 首次点击桌面「红魔PC游戏」图标时，会弹出 root 授权，**允许**即可完成配置。
+
+   > 💡 作用域为空时模块 Hook 不会加载，即使记录写进去了也会被游戏空间删掉。
+   > 从 1.0.3 起，**点击桌面图标时会自动检测并补全作用域**，所以这一步忘了也没关系
+   > —— 但仍建议手动确认一次，避免多绕一圈。
+4. 首次点击桌面「红魔PC游戏」图标时，会弹出 root 授权，**允许**即可完成配置。
 
 之后每次点击图标都会直接进入红魔PC游戏。
 
@@ -227,17 +230,41 @@ if (!isLauncherMainActivity(cn)) {
 因此 **必须 Hook `isLauncherMainActivity`**，对目标包直接返回 true。
 只 Hook `isInSystemAppList` 是不够的（那只是让记录能写进去，却挡不住被删）。
 
-### 5. 游戏助手会缓存判定结果
+### 5. 记录会不会「掉」？—— 取决于模块是否真正加载
+
+`appadd.db` 是普通 SQLite 文件，**写入本身是持久的**，重启设备不会丢。
+真正会掉的是这一步：游戏空间每次重建列表时都会校验
+
+```java
+if (!isLauncherMainActivity(cn)) {
+    AppAddModelHelper.deleteAppItemBeanInAppAddDB(deleteList);   // ← 记录被删
+}
+```
+
+红魔PC游戏和模拟器内核都没有 LAUNCHER 入口，这个判断永远是 false，
+唯一的例外就是模块 Hook 把它掰成 true。所以：
+
+| 条件 | 记录 |
+|---|---|
+| 模块 enabled + 作用域正确 | **长期保留**（已实测连扫多次 + 重启不掉） |
+| 模块 enabled 但**作用域为空** | 游戏空间重扫时被清空 |
+| 模块 disabled / 未安装 | 游戏空间重扫时被清空 |
+
+触发重扫的时机：设备重启、游戏空间被系统杀掉重启、列表刷新。
+**注意**：游戏空间进程一直活着时记录不会掉，所以故障可能潜伏很久，
+直到某次开机才暴露 —— 这就是为什么作用域自检很重要。
+
+### 6. 游戏助手会缓存判定结果
 
 往数据库写完记录后，**必须重启 `cn.nubia.gameassist` 和 `cn.zte.gamefloat`**，
 否则助手仍按旧缓存认为「当前不是游戏」，侧边栏不会出现。
 
-### 6. 不要用截图找小白条来验证
+### 7. 不要用截图找小白条来验证
 
 助手两侧的小白条在无操作一段时间后会自动隐藏。
 正确验证方式：**从屏幕左右上角向内侧滑动**呼出侧边栏。
 
-### 7. 两个包名都要覆盖
+### 8. 两个包名都要覆盖
 
 游戏运行时前台并不是 `com.zte.pcgame`，而是模拟器内核
 `com.xiaoji.egggame.redmagic`（WineActivity）。
@@ -253,7 +280,7 @@ app/src/main/
 ├── java/com/rm/pcgamelist/
 │   ├── Constants.java                      # 目标包、路径等常量
 │   ├── HookEntry.java                      # Xposed 入口（现代 API）
-│   ├── RootConfig.java                     # root 写数据库 + 重启助手
+│   ├── RootConfig.java                     # 作用域自检 + root 写数据库 + 重启助手
 │   └── LauncherActivity.java               # 桌面图标行为
 └── resources/META-INF/xposed/              # libxposed 元数据
     ├── module.prop
